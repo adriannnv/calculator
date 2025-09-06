@@ -3,6 +3,20 @@
 #define MAX_BUFFER_SIZE 1024
 #define MAX_NUMBER_SIZE 64
 
+// operator struct, important for shunting yard algorithm
+typedef struct {
+	const char *symbol;
+	int precedence;
+} Operator;
+
+Operator operators[] = {
+	{"+", 10},
+	{"-", 10},
+	{"*", 20},
+	{"/", 20},
+	{"^", 50}
+};
+
 void remove_whitespace(char *str)
 {
 	char *src = str;
@@ -58,6 +72,8 @@ void tokenize_input(char *input)
 //todo: convert the tokens to postfix format
 char *infix_to_postfix(char *s)
 {
+	int j = 0;
+	char i = strlen(s);
 	
 }
 
@@ -85,7 +101,7 @@ int main() {
 
 	char *postfix_input;
 
-	// postfix_input = infix_to_postfix(input);
+	postfix_input = infix_to_postfix(input);
 	
 	return 0;
 }

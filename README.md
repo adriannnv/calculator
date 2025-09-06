@@ -1,0 +1,1 @@
+CLI (for now) Calculator implemented using Shunting Yard Algorithm to create Reverse Polish Notation Studied in Uni (1st Year).
