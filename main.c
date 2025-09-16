@@ -79,6 +79,7 @@ void standardise(char *input)
 	}
 }
 // convert string without spaces in it to tokens (string separated by null terminators)
+// todo: handle EVERY INPUT not just the ones here, every input should go to else not to else if like is doing now
 Token *tokenize_input(char *input, int *nr_of_tokens)
 {
 	int len = strlen(input);
@@ -103,7 +104,10 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 			tokens[k].op = NULL;
 			k++;
 
-			// printf("Token: %s\n", number);
+			printf("Token: %s\n", number);
+		} else if (isalpha(input[i])) {
+			i++;
+			continue;	
 		} else {
 			char c = input[i];
 			
@@ -119,7 +123,7 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 				tokens[k].type = TOK_OPERATOR;
 				tokens[k].value = my_strndup(&c, 1);
 				
-				for (int a = 0; a < NR_OF_OPERATORS; a+) {
+				for (size_t a = 0; a < NR_OF_OPERATORS; a++) {
 					if (operators[a].symbol[0] == c) {
 						tokens[k].op = &operators[a];
 					}
@@ -142,44 +146,44 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 }	
 
 //todo: convert the tokens to postfix format
-char **infix_to_postfix(char **tokens, int n)
-{
-	// only holds pointers to strings that will be allocated later
-	char **output = malloc(n * sizeof(char *));
-	int k = 0;
+// char **infix_to_postfix(char **tokens, int n)
+// {
+// 	// only holds pointers to strings that will be allocated later
+// 	char **output = malloc(n * sizeof(char *));
+// 	int k = 0;
 
-	stack_t *op_stack = st_create(sizeof(char));
+// 	stack_t *op_stack = st_create(sizeof(char));
 
-	for (int i = 0; i < n; i++) {
-		if (isdigit(tokens[i][0])) {
-			output[k] = malloc(strlen(tokens[i]) + 1);
-			strcpy(output[k], tokens[i]);			
-			k++;
-		} else if (tokens[i][0] == '(') {
-			st_push(op_stack, (void *)tokens[i]);
-		} else if (tokens[i][0] == ')') {
+// 	for (int i = 0; i < n; i++) {
+// 		if (isdigit(tokens[i][0])) {
+// 			output[k] = malloc(strlen(tokens[i]) + 1);
+// 			strcpy(output[k], tokens[i]);			
+// 			k++;
+// 		} else if (tokens[i][0] == '(') {
+// 			st_push(op_stack, (void *)tokens[i]);
+// 		} else if (tokens[i][0] == ')') {
 
-		} else {
-			int isOperator = 0;
-			for (int i = 0; i < NR_OF_OPERATORS; i++) {
-				if (operators->symbol[i] == tokens[i][0]) {
-					isOperator = 1;
-					break;
-				}
-			}
+// 		} else {
+// 			int isOperator = 0;
+// 			for (size_t i = 0; i < NR_OF_OPERATORS; i++) {
+// 				if (operators->symbol[i] == tokens[i][0]) {
+// 					isOperator = 1;
+// 					break;
+// 				}
+// 			}
 
-			if (isOperator) {
+// 			if (isOperator) {
 				
-			} else {
-				printf("Unknown operand: %s", tokens[i][0]);
-				break;
-			}
+// 			} else {
+// 				printf("Unknown operand: %s", tokens[i][0]);
+// 				break;
+// 			}
 			
-		}
+// 		}
 		
-	}
-	return output;
-}
+// 	}
+// 	return output;
+// }
 
 int main() {
 	char input[MAX_BUFFER_SIZE];
@@ -204,7 +208,7 @@ int main() {
 	int nr_of_tokens;
 	Token *tokens = tokenize_input(input, &nr_of_tokens);
 
-	char **postfix_input = infix_to_postfix(tokens, nr_of_tokens);
+	// char **postfix_input = infix_to_postfix(tokens, nr_of_tokens);
 	
 	return 0;
 }
