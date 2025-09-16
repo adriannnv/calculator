@@ -2,12 +2,26 @@
 
 #define MAX_BUFFER_SIZE 1024
 #define MAX_NUMBER_SIZE 64
-// operator struct, important for shunting yard algorithm
+
+typedef enum {
+	TOK_NUMBER,
+	TOK_OPERATOR,
+	TOK_PARANTH_OPEN,
+	TOK_PARANTH_CLOSE
+} TokenType;
+
 typedef struct {
 	const char *symbol;
 	int precedence;
 } Operator;
 
+typedef struct {
+	TokenType type;
+	char *value;
+	Operator *op;
+} Token;
+
+// operators[i].symbol[0] to access
 Operator operators[] = {
 	{"+", 10},
 	{"-", 10},
@@ -16,7 +30,25 @@ Operator operators[] = {
 	{"^", 50}
 };
 
+// macro for ease of for loop n'ing
 #define NR_OF_OPERATORS (sizeof(operators) / sizeof(operators[0]))
+
+char *my_strndup(const char *s, size_t n)
+{
+	size_t len = strlen(s);
+	
+	if (len > n)
+		len = n;
+	
+	char *copy = malloc(len + 1);
+	if (!copy)
+		return NULL;
+
+	memcpy(copy, s, len);
+	copy[len] = '\0';
+
+	return copy;
+}
 
 void remove_whitespace(char *str)
 {
@@ -47,10 +79,11 @@ void standardise(char *input)
 	}
 }
 // convert string without spaces in it to tokens (string separated by null terminators)
-char **tokenize_input(char *input, int *nr_of_tokens)
+Token *tokenize_input(char *input, int *nr_of_tokens)
 {
 	int len = strlen(input);
-	char **array_of_tokens = malloc(len * sizeof(char *));
+	// char **array_of_tokens = malloc(len * sizeof(char *));
+	Token *tokens = malloc(len * sizeof(Token));
 
 	int i = 0;
 	int k = 0;
@@ -64,26 +97,48 @@ char **tokenize_input(char *input, int *nr_of_tokens)
 
 			number[j] = '\0';
 
-			array_of_tokens[k] =  malloc(strlen(number) + 1); 
-			strcpy(array_of_tokens[k], number);
+			// array_of_tokens[k] =  malloc(strlen(number) + 1); 
+			tokens[k].type = TOK_NUMBER;
+			tokens[k].value = strdup(number);
+			tokens[k].op = NULL;
 			k++;
 
-			printf("Token: %s\n", number);
+			// printf("Token: %s\n", number);
 		} else {
-			// hardcoded to operator + '\0' for now
-			char op[2] = {input[i], '\0'};
-			array_of_tokens[k] = malloc(sizeof(op));
+			char c = input[i];
+			
+			if (c == '(') {
+				tokens[k].type = TOK_PARANTH_OPEN;
+				tokens[k].value = my_strndup(&c, 1);
+				tokens[k].op = NULL;
+			} else if (c == ')') {
+				tokens[k].type = TOK_PARANTH_CLOSE;
+				tokens[k].value = my_strndup(&c, 1);
+				tokens[k].op = NULL;
+			} else {
+				tokens[k].type = TOK_OPERATOR;
+				tokens[k].value = my_strndup(&c, 1);
+				
+				for (int a = 0; a < NR_OF_OPERATORS; a+) {
+					if (operators[a].symbol[0] == c) {
+						tokens[k].op = &operators[a];
+					}
+				}
+				
+			}
+			
+			printf("Token %c\n", c);
 
-			printf("Token %s\n", op);
-
-			k++;
+			// incrementor of while loop.
 			i++;
+			// counter of tokens
+			k++;
 		}
 	}
 
 	*nr_of_tokens = k;
 
-	return array_of_tokens;
+	return tokens;
 }	
 
 //todo: convert the tokens to postfix format
@@ -114,7 +169,7 @@ char **infix_to_postfix(char **tokens, int n)
 			}
 
 			if (isOperator) {
-
+				
 			} else {
 				printf("Unknown operand: %s", tokens[i][0]);
 				break;
@@ -147,9 +202,9 @@ int main() {
 	remove_whitespace(input);
 	standardise(input);
 	int nr_of_tokens;
-	char **words_array = tokenize_input(input, &nr_of_tokens);
+	Token *tokens = tokenize_input(input, &nr_of_tokens);
 
-	char **postfix_input = infix_to_postfix(words_array, nr_of_tokens);
+	char **postfix_input = infix_to_postfix(tokens, nr_of_tokens);
 	
 	return 0;
 }
