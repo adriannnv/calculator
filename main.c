@@ -145,45 +145,94 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 	return tokens;
 }	
 
-//todo: convert the tokens to postfix format
-// char **infix_to_postfix(char **tokens, int n)
-// {
-// 	// only holds pointers to strings that will be allocated later
-// 	char **output = malloc(n * sizeof(char *));
-// 	int k = 0;
+Token *infix_to_postfix(Token *tokens, int n, int *output_n)
+{
+	Token *output = malloc(n * sizeof(Token));
+	stack_t *op_stack = st_create(sizeof(Token));
 
-// 	stack_t *op_stack = st_create(sizeof(char));
+	int k = 0;
+	for (int i = 0; i < n; i++) {
+		Token t = tokens[i];
 
-// 	for (int i = 0; i < n; i++) {
-// 		if (isdigit(tokens[i][0])) {
-// 			output[k] = malloc(strlen(tokens[i]) + 1);
-// 			strcpy(output[k], tokens[i]);			
-// 			k++;
-// 		} else if (tokens[i][0] == '(') {
-// 			st_push(op_stack, (void *)tokens[i]);
-// 		} else if (tokens[i][0] == ')') {
-
-// 		} else {
-// 			int isOperator = 0;
-// 			for (size_t i = 0; i < NR_OF_OPERATORS; i++) {
-// 				if (operators->symbol[i] == tokens[i][0]) {
-// 					isOperator = 1;
-// 					break;
-// 				}
-// 			}
-
-// 			if (isOperator) {
-				
-// 			} else {
-// 				printf("Unknown operand: %s", tokens[i][0]);
-// 				break;
-// 			}
-			
-// 		}
+		switch (t.type) {
 		
-// 	}
-// 	return output;
-// }
+		case TOK_NUMBER:
+			// numbers go straight to output
+			output[k++] = t;
+			break;
+		case TOK_OPERATOR: {
+			Token top;
+			while (!st_is_empty(op_stack)) {
+				
+				// we dont use top = stpeek because it is dangerous to work with it after. rather just copy into it for less issues.
+				memcpy(&top, st_peek(op_stack), sizeof(Token));
+
+				if (top.type == TOK_OPERATOR &&
+					top.op->precedence >= t.op->precedence) {
+						st_pop(op_stack);
+						output[k++] = top;
+				} else {
+					break;
+				}
+			}
+			
+			st_push(op_stack, &t);
+			break;
+		}
+		case TOK_PARANTH_OPEN:
+			st_push(op_stack, &t);
+			break;
+		case TOK_PARANTH_CLOSE: {
+			Token top;
+			while (!st_is_empty(op_stack)) {
+				
+				memcpy(&top, st_peek(op_stack), sizeof(Token));
+				st_pop(op_stack);
+
+				if (top.type == TOK_PARANTH_OPEN) {
+					break;
+				} else {
+					output[k++] = top;
+				}
+			}
+			break;
+		}
+		}
+	}
+
+	while (!st_is_empty(op_stack)) {
+		Token top;
+		memcpy(&top, st_peek(op_stack), sizeof(Token));
+		st_pop(op_stack);
+		output[k++] = top;
+	}
+	
+	*output_n = k;
+
+
+	printf("Postfix expression:\n");
+	for (int i = 0; i < k; i++) {
+		Token t = output[i];
+		switch (t.type) {
+			case TOK_NUMBER:
+				printf("NUMBER: %s\n", t.value);
+				break;
+			case TOK_OPERATOR:
+				printf("OPERATOR: %s (precedence %d)\n", t.value, t.op->precedence);
+				break;
+			case TOK_PARANTH_OPEN:
+				printf("PAREN_OPEN: %s\n", t.value);
+				break;
+			case TOK_PARANTH_CLOSE:
+				printf("PAREN_CLOSE: %s\n", t.value);
+				break;
+			default:
+				printf("UNKNOWN TOKEN: %s\n", t.value);
+				break;
+		}
+	}
+	return output;
+}
 
 int main() {
 	char input[MAX_BUFFER_SIZE];
@@ -208,7 +257,8 @@ int main() {
 	int nr_of_tokens;
 	Token *tokens = tokenize_input(input, &nr_of_tokens);
 
-	// char **postfix_input = infix_to_postfix(tokens, nr_of_tokens);
+	int output_n;
+	Token *formatted_to_postfix = infix_to_postfix(tokens, nr_of_tokens, &output_n);
 	
 	return 0;
 }
