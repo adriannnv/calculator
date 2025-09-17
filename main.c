@@ -89,16 +89,23 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 	int i = 0;
 	int k = 0;
 	while (i < len) {
-		if (isdigit(input[i])) {
+		if (isdigit(input[i]) || 
+			// negative numbers are born through this check.
+			(input[i] == '-' && (i == 0 ||
+				tokens[k-1].type == TOK_OPERATOR ||
+				tokens[k-1].type == TOK_PARANTH_OPEN))) {
 			char number[MAX_NUMBER_SIZE];
 			int j = 0;
+
+			if (input[i] == '-') {
+				number[j++] = input[i++];
+			}
 
 			while (i < len && (isdigit(input[i]) || input[i] == '.'))
 				number[j++] = input[i++];
 
 			number[j] = '\0';
 
-			// array_of_tokens[k] =  malloc(strlen(number) + 1); 
 			tokens[k].type = TOK_NUMBER;
 			tokens[k].value = strdup(number);
 			tokens[k].op = NULL;
@@ -266,6 +273,10 @@ double compute_result(Token *postfix, int n)
 				res = left_val * right_val;
 				break;
 			case '/':
+				if (!right_val) {
+					fprintf(stderr, "Division by zero\n");
+					return NAN;
+				}
 				res = left_val / right_val;
 				break;
 			case '^':
