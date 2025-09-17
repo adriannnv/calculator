@@ -62,7 +62,7 @@ void remove_whitespace(char *str)
 		src++;
 	}
 	*dst = '\0';
-	printf("String after removing whitespace: %s\n", str);
+	// printf("String after removing whitespace: %s\n", str);
 }
 
 // convert , to .
@@ -104,7 +104,7 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 			tokens[k].op = NULL;
 			k++;
 
-			printf("Token: %s\n", number);
+			// printf("Token: %s\n", number);
 		} else if (isalpha(input[i])) {
 			i++;
 			continue;	
@@ -131,7 +131,7 @@ Token *tokenize_input(char *input, int *nr_of_tokens)
 				
 			}
 			
-			printf("Token %c\n", c);
+			// printf("Token %c\n", c);
 
 			// incrementor of while loop.
 			i++;
@@ -197,6 +197,8 @@ Token *infix_to_postfix(Token *tokens, int n, int *output_n)
 			}
 			break;
 		}
+		default:
+			break;
 		}
 	}
 
@@ -234,6 +236,55 @@ Token *infix_to_postfix(Token *tokens, int n, int *output_n)
 	return output;
 }
 
+double compute_result(Token *postfix, int n)
+{
+	stack_t *val_stack = st_create(sizeof(double));
+
+	for (int i = 0; i < n; i++) {
+		Token t = postfix[i];
+
+		if (t.type == TOK_NUMBER) {
+			double val = atof(t.value);
+			st_push(val_stack, &val);
+		} else if (t.type == TOK_OPERATOR) {
+			double right_val = *(double *)st_peek(val_stack);
+			st_pop(val_stack);
+
+			double left_val = *(double *)st_peek(val_stack);
+			st_pop(val_stack);
+
+			double res = 0;
+
+			switch (t.value[0]) {
+			case '+':
+				res = left_val + right_val;
+				break;
+			case '-':
+				res = left_val - right_val;
+				break;
+			case '*':
+				res = left_val * right_val;
+				break;
+			case '/':
+				res = left_val / right_val;
+				break;
+			case '^':
+				res = pow(left_val, right_val);
+				break;
+			default:
+				break;
+			}
+
+			st_push(val_stack, &res);
+		}
+	}
+
+	double final_result = *(double *)st_peek(val_stack);
+	st_pop(val_stack);
+	
+	return final_result;
+}
+
 int main() {
 	char input[MAX_BUFFER_SIZE];
 
@@ -260,5 +311,8 @@ int main() {
 	int output_n;
 	Token *formatted_to_postfix = infix_to_postfix(tokens, nr_of_tokens, &output_n);
 	
+	double result = compute_result(formatted_to_postfix, output_n);
+
+	printf("Result: %f\n", result);
 	return 0;
 }

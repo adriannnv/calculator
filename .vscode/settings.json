@@ -1,6 +1,7 @@
 {
 	"files.associations": {
 		"linked_list.h": "c",
-		"main.h": "c"
+		"main.h": "c",
+		"utils.h": "c"
 	}
 }
